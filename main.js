@@ -1,4 +1,5 @@
-let carrito = [];
+const carritoGuardado = localStorage.getItem('carrito');
+let carrito = carritoGuardado ? JSON.parse(carritoGuardado) : [];
 let listaProductos = [];
 
 const mostrarProductos = document.getElementById('productContainer');
@@ -93,6 +94,7 @@ for (let btn of botones) {
 function actualizarCarrito() {
   cantidadCarrito.textContent = carrito.reduce((acc, item) => acc + item.cantidad, 0);
   mostrarCarrito();
+  localStorage.setItem('carrito', JSON.stringify(carrito));
 }
 
 function eliminarDelCarrito(id) {
