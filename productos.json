@@ -1,0 +1,43 @@
+[
+    {
+        "id":1,
+        "nombre": "auricular a6s",
+        "precio": 90000
+    },
+    
+    {
+        "id":2,
+        "nombre": "auricular m10",
+        "precio": 120000
+    },
+    
+    {
+        "id":3,
+        "nombre": "auricular f9-5",
+        "precio": 9000
+    },
+    
+    {
+        "id":4,
+        "nombre": "reloj xiaomi",
+        "precio": 9000
+    },
+    
+    {
+        "id":5,
+        "nombre": "reloj samsung",
+        "precio": 9000
+    },
+    
+    {
+        "id":6,
+        "nombre": "reloj apple",
+        "precio": 9000
+    },
+    
+    {
+        "id":7,
+        "nombre": "reloj huawei",
+        "precio": 9000
+    }
+]
