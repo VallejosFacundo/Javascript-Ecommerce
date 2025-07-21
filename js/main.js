@@ -13,7 +13,7 @@ const btnCheckout = document.getElementById('btn-checkout');
 
 async function cargarProductos() {
   try {
-    const res = await fetch('productos.json');
+    const res = await fetch('database/productos.json');
     listaProductos = await res.json();
     renderizarProductos();
   } catch (err) {
@@ -73,23 +73,56 @@ function mostrarCarrito() {
     div.innerHTML = `
       <span>${item.nombre} x${item.cantidad}</span>
       <span>$${item.precio * item.cantidad}</span>
-      <button data-id="${item.id}">&times;</button>
+      <button class="menos" data-id="${item.id}">-</button>
+      <button class="mas" data-id="${item.id}">+</button>
+      <button class="eliminar" data-id="${item.id}">&times;</button>
     `;
     carritoItems.appendChild(div);
   });
 
-  const botones = carritoItems.getElementsByTagName('button');
-for (let btn of botones) {
-  btn.addEventListener('click', () => {
-    const id = parseInt(btn.dataset.id);
-    eliminarDelCarrito(id);
-  });
-}
-
+  carritoItems.querySelectorAll('.mas').forEach(btn =>
+    btn.addEventListener('click', () => modificarCantidad(btn.dataset.id, 1))
+  );
+  carritoItems.querySelectorAll('.menos').forEach(btn =>
+    btn.addEventListener('click', () => modificarCantidad(btn.dataset.id, -1))
+  );
+  carritoItems.querySelectorAll('.eliminar').forEach(btn =>
+    btn.addEventListener('click', () => eliminarDelCarrito(parseInt(btn.dataset.id)))
+  );
 
   const total = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
   totalCarrito.textContent = total;
 }
+
+function modificarCantidad(id, cambio) {
+  const item = carrito.find(p => p.id == id);
+  if (!item) return;
+
+  item.cantidad += cambio;
+  if (item.cantidad <= 0) {
+    eliminarDelCarrito(item.id);
+  } else {
+    actualizarCarrito();
+  }
+}
+
+const btnVaciar = document.getElementById('btn-vaciar');
+btnVaciar.addEventListener('click', () => {
+  if (carrito.length === 0) return Swal.fire('El carrito ya está vacío');
+  Swal.fire({
+    title: '¿Vaciar carrito?',
+    text: 'Se eliminarán todos los productos',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, vaciar',
+  }).then(result => {
+    if (result.isConfirmed) {
+      carrito = [];
+      actualizarCarrito();
+    }
+  });
+});
+
 
 function actualizarCarrito() {
   cantidadCarrito.textContent = carrito.reduce((acc, item) => acc + item.cantidad, 0);
@@ -134,27 +167,54 @@ function finalizarConDatos() {
       `<input id="direccion" class="swal2-input" placeholder="Dirección">`,
     confirmButtonText: 'Finalizar',
     preConfirm: () => {
-      const nombre = document.getElementById('nombre').value;
-      const email = document.getElementById('email').value;
-      const direccion = document.getElementById('direccion').value;
-
+      const nombre = document.getElementById('nombre').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const direccion = document.getElementById('direccion').value.trim();
+      
+      const nombreValido = /^[a-zA-Z\s]+$/.test(nombre);
+      const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      
       if (!nombre || !email || !direccion) {
         Swal.showValidationMessage('Por favor, completa todos los campos');
         return false;
-      }
-      return { nombre, email, direccion };
+      }if (!nombreValido) {
+        Swal.showValidationMessage('El nombre solo debe contener letras');
+        return false;
+      }if (!emailValido) {
+        Swal.showValidationMessage('El email no es válido');
+        return false;
+      }return { nombre, email, direccion };
     }
+
   }).then(result => {
-    if (result.isConfirmed) {
-      carrito = [];
-      actualizarCarrito();
-      Swal.fire(
-        'Gracias por tu compra',
-        `Te enviaremos un mail a <b>${result.value.email}</b>`,
-        'success'
-      );
-    }
-  });
+  if (result.isConfirmed) {
+    const resumen = carrito.map(item =>
+      `${item.nombre} x${item.cantidad} = $${item.precio * item.cantidad}`
+    ).join('<br>');
+    const total = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
+
+    Swal.fire({
+      title: 'Resumen de compra',
+      html: `
+        <p><b>Nombre:</b> ${result.value.nombre}</p>
+        <p><b>Email:</b> ${result.value.email}</p>
+        <p><b>Dirección:</b> ${result.value.direccion}</p>
+        <hr>
+        ${resumen}
+        <hr>
+        <b>Total: $${total}</b>
+      `,
+      confirmButtonText: 'Confirmar compra'
+    }).then(r => {
+      if (r.isConfirmed) {
+        carrito = [];
+        actualizarCarrito();
+        Swal.fire('Compra realizada', 'Gracias por tu compra', 'success');
+      }
+    });
+  }
+});
+
 }
 
 
